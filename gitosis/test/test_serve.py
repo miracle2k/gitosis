@@ -1,5 +1,5 @@
 from nose.tools import eq_ as eq
-from gitosis.test.util import assert_raises
+from gitosis.test.util import assert_raises, readFile, check_mode
 
 import logging
 import os
@@ -502,6 +502,47 @@ def test_push_inits_sets_htaccess():
     eq(os.listdir(repositories), ['foo.git'])
     path = os.path.join(repositories, 'foo.git', '.htaccess')
     assert os.path.exists(path)
+
+def test_push_inits_templates():
+    tmp = util.maketemp()
+    templatedir = os.path.join(
+        os.path.dirname(__file__),
+        'mocktemplates',
+        )
+    cfg = RawConfigParser()
+    cfg.add_section('gitosis')
+    repositories = os.path.join(tmp, 'repositories')
+    os.mkdir(repositories)
+    cfg.set('gitosis', 'repositories', repositories)
+    cfg.set('gitosis', 'init-template', templatedir)
+    generated = os.path.join(tmp, 'generated')
+    os.mkdir(generated)
+    cfg.set('gitosis', 'generate-files-in', generated)
+    cfg.add_section('group foo')
+    cfg.set('group foo', 'members', 'jdoe')
+    cfg.set('group foo', 'writable', 'foo')
+    os.umask(0022)
+    serve.serve(
+        cfg=cfg,
+        user='jdoe',
+        command="git-receive-pack 'foo'",
+        )
+    eq(os.listdir(repositories), ['foo.git'])
+    path = os.path.join(repositories, 'foo.git')
+    assert os.path.isfile(os.path.join(path, 'HEAD'))
+    got = readFile(os.path.join(path, 'no-confusion'))
+    eq(got, 'i should show up\n')
+    check_mode(
+        os.path.join(path, 'hooks', 'post-update'),
+        0755,
+        is_file=True,
+        )
+    got = readFile(os.path.join(path, 'hooks', 'post-update'))
+    eq(got, '#!/bin/sh\n# i can override standard templates\n')
+    # standard templates are there, too
+    assert (os.path.isfile(os.path.join(path, 'hooks', 'pre-rebase'))
+            or os.path.isfile(os.path.join(path, 'hooks', 'pre-rebase.sample')))
+
 
 def test_absolute():
     # as the only convenient way to use non-standard SSH ports with

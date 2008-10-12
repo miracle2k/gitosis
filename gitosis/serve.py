@@ -8,6 +8,8 @@ import logging
 
 import sys, os, re
 
+from ConfigParser import NoSectionError, NoOptionError
+
 from gitosis import access
 from gitosis import repository
 from gitosis import gitweb
@@ -142,6 +144,13 @@ def serve(
         for segment in repopath.split(os.sep)[:-1]:
             p = os.path.join(p, segment)
             util.mkdir(p, 0750)
+
+        # init using a custom template, if required
+        try:
+            template = cfg.get('gitosis', 'init-template')
+            repository.init(path=fullpath,template=template)
+        except (NoSectionError, NoOptionError):
+            pass
 
         repository.init(path=fullpath)
         gitweb.set_descriptions(
