@@ -1,6 +1,7 @@
 from nose.tools import eq_ as eq, assert_raises
 
 from ConfigParser import RawConfigParser
+from cStringIO import StringIO
 
 from gitosis import group
 
@@ -136,3 +137,24 @@ def test_no_recurse_loop():
     gen = group.getMembership(config=cfg, user='jdoe')
     eq(gen.next(), 'all')
     assert_raises(StopIteration, gen.next)
+
+def test_groupList_multiple():
+    cfg = RawConfigParser()
+    cfg.add_section('gitosis')
+    cfg.add_section('group all')
+    cfg.set('group all', 'readonly', 'zap')
+    cfg.add_section('group foo')
+    cfg.set('group foo', 'members', 'a b @bar')
+    cfg.add_section('group bar')
+    cfg.set('group bar', 'members', 'c d')
+    cfg.add_section('group baz')
+    cfg.set('group baz', 'members', '@all')
+    got = StringIO()
+    group.generate_group_list_fp(
+        config=cfg,
+        fp=got)
+    eq(got.getvalue(), '''\
+foo: a b c d
+bar: c d
+baz: 
+''')

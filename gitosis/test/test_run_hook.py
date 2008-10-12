@@ -76,13 +76,20 @@ description = blah blah
         )
     got = readFile(os.path.join(repos, 'forweb.git', 'description'))
     eq(got, 'blah blah\n')
-    got = os.listdir(generated)
-    eq(got, ['projects.list'])
+    got = sorted(os.listdir(generated))
+    eq(got, ['groups', 'projects.list'])
     got = readFile(os.path.join(generated, 'projects.list'))
     eq(
         got,
         """\
 forweb.git John+Doe
+""",
+        )
+    got = readFile(os.path.join(generated, 'groups'))
+    eq(
+        got,
+        """\
+gitosis-admin: theadmin
 """,
         )
     got = os.listdir(os.path.join(repos, 'fordaemon.git'))

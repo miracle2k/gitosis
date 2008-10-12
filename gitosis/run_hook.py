@@ -14,6 +14,7 @@ from gitosis import gitweb
 from gitosis import gitdaemon
 from gitosis import app
 from gitosis import util
+from gitosis import group
 
 def post_update(cfg, git_dir):
     export = os.path.join(git_dir, 'gitosis-export')
@@ -38,6 +39,10 @@ def post_update(cfg, git_dir):
     gitweb.generate_project_list(
         config=cfg,
         path=os.path.join(generated, 'projects.list'),
+        )
+    group.generate_group_list(
+        config=cfg,
+        path=os.path.join(generated, 'groups'),
         )
     gitdaemon.set_export_ok(
         config=cfg,

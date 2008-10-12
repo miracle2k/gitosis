@@ -1,4 +1,4 @@
-import logging
+import os, logging
 from ConfigParser import NoSectionError, NoOptionError
 
 def _getMembership(config, user, seen):
@@ -53,3 +53,75 @@ def getMembership(config, user):
     # everyone is always a member of group "all"
     yield 'all'
 
+
+def listMembers(config, group, mset):
+    """
+    Generate a list of members of a group
+
+    :type config: RawConfigParser
+    :type group: str
+    :param mset: Set of members to amend
+    """
+
+    if group <> 'all':
+        try:
+            members = config.get('group %s' % group, 'members')
+        except (NoSectionError, NoOptionError):
+            members = []
+        else:
+            members = members.split()
+
+        for user in members:
+            if user in mset:
+                pass
+            else:
+                mset.add(user)
+                if user.startswith('@'):
+                    listMembers(config,user[1:],mset)
+
+
+def generate_group_list_fp(config, fp):
+    """
+    Generate group list for ``gitweb``.
+
+    :param config: configuration to read projects from
+    :type config: RawConfigParser
+
+    :param fp: file to write group list to
+    :type fp: file
+    """
+    for section in config.sections():
+        GROUP_PREFIX = 'group '
+        if not section.startswith(GROUP_PREFIX):
+            continue
+        group = section[len(GROUP_PREFIX):]
+        if group == 'all':
+            continue
+
+        items = set()
+        listMembers(config,group,items)
+
+        users = filter(lambda u: not u.startswith('@'), items)
+        line = group + ': ' + ' '.join(sorted(users))
+        print >>fp, line
+
+
+def generate_group_list(config, path):
+    """
+    Generate group list for ``gitweb``.
+
+    :param config: configuration to read projects from
+    :type config: RawConfigParser
+
+    :param path: path to write group list to
+    :type path: str
+    """
+    tmp = '%s.%d.tmp' % (path, os.getpid())
+
+    f = file(tmp, 'w')
+    try:
+        generate_group_list_fp(config=config, fp=f)
+    finally:
+        f.close()
+
+    os.rename(tmp, path)
