@@ -48,17 +48,9 @@ def write_htaccess(repopath, users, groups):
 
 def gen_htaccess(config):
     for (dirpath, repo, name) in gitdaemon.walk_repos(config):
-        users = set()
-        groups = set()
-        access.listAccess(config,'readonly',name,users,groups)
-        access.listAccess(config,'writable',name,users,groups)
-        access.listAccess(config,'writeable',name,users,groups)
+        (users, groups, all_refs) = access.getAllAccess(config,name)
 
-        all_refs = set()
-        for grp in groups:
-            group.listMembers(config,grp,all_refs)
-
-        if '@all' in all_refs or 'all' in groups:
+        if '@all' in all_refs:
             log.debug('Allow all for %r', name)
             remove_htaccess(os.path.join(dirpath, repo))
         else:

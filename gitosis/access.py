@@ -140,3 +140,19 @@ def listAccess(config, mode, path, users, groups):
             for (iname, ivalue) in config.items(sectname):
                 if ivalue == path and iname.startswith('map %s ' % mode):
                     out_set.add(name)
+
+
+def getAllAccess(config,path,modes=['readonly','writable','writeable']):
+    """
+    Returns access information for a certain repository.
+    """
+    users = set()
+    groups = set()
+    for mode in modes:
+        listAccess(config,mode,path,users,groups)
+
+    all_refs = set(['@'+item for item in groups])
+    for grp in groups:
+        group.listMembers(config,grp,all_refs)
+
+    return (users, groups, all_refs)

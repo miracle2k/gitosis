@@ -176,6 +176,19 @@ def test_list_read():
     eq(sorted(groups), ['mooers'])
     eq(sorted(users), ['jdoe'])
 
+def test_list_all():
+    cfg = RawConfigParser()
+    cfg.add_section('group fooers')
+    cfg.set('group fooers', 'members', 'jdoe')
+    cfg.set('group fooers', 'map writable foo/bar', 'baz/quux/thud')
+    cfg.add_section('group mooers')
+    cfg.set('group mooers', 'members', '@fooers')
+    cfg.set('group mooers', 'readonly', 'baz/quux/thud')
+    (users, groups, all_refs) = access.getAllAccess(cfg,'baz/quux/thud',['readonly'])
+    eq(sorted(users), [])
+    eq(sorted(groups), ['mooers'])
+    eq(sorted(all_refs), ['@fooers','@mooers','jdoe'])
+
 def test_dotgit():
     # a .git extension is always allowed to be added
     cfg = RawConfigParser()
