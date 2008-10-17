@@ -36,6 +36,7 @@ stuff
         files=[
             ('gitosis.conf', """\
 [gitosis]
+init-on-config = yes
 
 [group gitosis-admin]
 members = theadmin
@@ -48,6 +49,9 @@ daemon = yes
 gitweb = yes
 owner = John Doe
 description = blah blah
+
+[repo initme]
+description = auto-init me
 """),
             ('keydir/jdoe.pub',
              'ssh-somealgo '
@@ -77,6 +81,8 @@ description = blah blah
         )
     got = readFile(os.path.join(repos, 'forweb.git', 'description'))
     eq(got, 'blah blah\n')
+    got = readFile(os.path.join(repos, 'initme.git', 'description'))
+    eq(got, 'auto-init me\n')
     got = sorted(os.listdir(generated))
     eq(got, ['groups', 'projects.list'])
     got = readFile(os.path.join(generated, 'projects.list'))

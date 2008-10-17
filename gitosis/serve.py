@@ -56,6 +56,24 @@ class WriteAccessDenied(AccessDenied):
 class ReadAccessDenied(AccessDenied):
     """Repository read access denied"""
 
+def auto_init_repo(cfg,topdir,repopath):
+    # create leading directories
+    p = topdir
+    for segment in repopath.split(os.sep)[:-1]:
+        p = os.path.join(p, segment)
+        util.mkdir(p, 0750)
+
+    fullpath = os.path.join(topdir, repopath)
+
+    # init using a custom template, if required
+    try:
+        template = cfg.get('gitosis', 'init-template')
+        repository.init(path=fullpath,template=template)
+    except (NoSectionError, NoOptionError):
+        pass
+
+    repository.init(path=fullpath)
+
 def serve(
     cfg,
     user,
@@ -139,20 +157,7 @@ def serve(
         # refers to it, we're serving a write request, and the user is
         # authorized to do that: create the repository on the fly
 
-        # create leading directories
-        p = topdir
-        for segment in repopath.split(os.sep)[:-1]:
-            p = os.path.join(p, segment)
-            util.mkdir(p, 0750)
-
-        # init using a custom template, if required
-        try:
-            template = cfg.get('gitosis', 'init-template')
-            repository.init(path=fullpath,template=template)
-        except (NoSectionError, NoOptionError):
-            pass
-
-        repository.init(path=fullpath)
+        auto_init_repo(cfg,topdir,repopath)
         gitweb.set_descriptions(
             config=cfg,
             )
