@@ -103,7 +103,50 @@ def haveAccess(config, user, mode, path):
             return (prefix, mapping)
 
 
-def listAccess(config, mode, path, users, groups):
+def cacheAccess(config, mode, cache):
+    """
+    Computes access lists for all repositories in one pass.
+    """
+    for sectname in config.sections():
+        GROUP_PREFIX = 'group '
+        USER_PREFIX  = 'user '
+        REPO_PREFIX  = 'repo '
+        if sectname.startswith(USER_PREFIX):
+            idx = 0
+            name = sectname[len(USER_PREFIX):]
+        elif sectname.startswith(GROUP_PREFIX):
+            idx = 1
+            name = sectname[len(GROUP_PREFIX):]
+        elif sectname.startswith(REPO_PREFIX):
+            # Single repository: handle owner
+            name = sectname[len(REPO_PREFIX):]
+            if (mode,name) not in cache:
+                cache[mode,name] = (set(),set())
+
+            continue
+
+        else:
+            continue
+
+        try:
+            repos = config.get(sectname, mode)
+        except (NoSectionError, NoOptionError):
+            repos = []
+        else:
+            repos = repos.split()
+
+        for (iname, ivalue) in config.items(sectname):
+            if iname.startswith('map %s ' % mode):
+                repos.append(ivalue)
+
+        for path in repos:
+            if (mode,path) not in cache:
+                cache[mode,path] = (set(),set())
+
+            cache[mode,path][idx].add(name)
+
+
+def listAccess(config, table, mode, path, users, groups):
     """
     List users and groups who can access the path.
 
@@ -115,41 +158,37 @@ def listAccess(config, mode, path, users, groups):
     if ext == '.git':
         path = basename
 
-    for sectname in config.sections():
-        GROUP_PREFIX = 'group '
-        USER_PREFIX  = 'user '
-        if sectname.startswith(GROUP_PREFIX):
-            out_set = groups
-            name = sectname[len(GROUP_PREFIX):]
-        elif sectname.startswith(USER_PREFIX):
-            out_set = users
-            name = sectname[len(USER_PREFIX):]
-        else:
-            continue
+    if (mode,path) in table:
+        (cusers, cgroups) = table[mode,path]
+        users.update(cusers)
+        groups.update(cgroups)
 
-        try:
-            repos = config.get(sectname, mode)
-        except (NoSectionError, NoOptionError):
-            repos = []
-        else:
-            repos = repos.split()
-
-        if path in repos:
-            out_set.add(name)
-        else:
-            for (iname, ivalue) in config.items(sectname):
-                if ivalue == path and iname.startswith('map %s ' % mode):
-                    out_set.add(name)
+    if (mode,None) in table:
+        (cusers, cgroups) = table[mode,None]
+        users.update(cusers)
+        groups.update(cgroups)
 
 
-def getAllAccess(config,path,modes=['readonly','writable','writeable']):
+def getAccessTable(config,modes=['readonly','writable','writeable']):
+    """
+    A trivial helper that builds ACL table for all repositories
+    and given set of modes.
+    """
+    table = dict()
+    for mode in modes:
+        cacheAccess(config,mode,table)
+
+    return table
+
+
+def getAllAccess(config,table,path,modes=['readonly','writable','writeable']):
     """
     Returns access information for a certain repository.
     """
     users = set()
     groups = set()
     for mode in modes:
-        listAccess(config,mode,path,users,groups)
+        listAccess(config,table,mode,path,users,groups)
 
     all_refs = set(['@'+item for item in groups])
     for grp in groups:

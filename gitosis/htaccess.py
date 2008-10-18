@@ -47,8 +47,10 @@ def write_htaccess(repopath, users, groups):
 
 
 def gen_htaccess(config):
+    table = access.getAccessTable(config)
+
     for (dirpath, repo, name) in gitdaemon.walk_repos(config):
-        (users, groups, all_refs) = access.getAllAccess(config,name)
+        (users, groups, all_refs) = access.getAllAccess(config,table,name)
 
         if '@all' in all_refs:
             log.debug('Allow all for %r', name)
