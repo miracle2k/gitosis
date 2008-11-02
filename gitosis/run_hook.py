@@ -12,6 +12,7 @@ from gitosis import repository
 from gitosis import ssh
 from gitosis import gitweb
 from gitosis import gitdaemon
+from gitosis import htaccess
 from gitosis import app
 from gitosis import util
 from gitosis import group
@@ -40,13 +41,14 @@ def post_update(cfg, git_dir):
         config=cfg,
         path=os.path.join(generated, 'projects.list'),
         )
-    group.generate_group_list(
-        config=cfg,
-        path=os.path.join(generated, 'groups'),
-        )
     gitdaemon.set_export_ok(
         config=cfg,
         )
+    if htaccess.gen_htaccess_if_enabled(config=cfg):
+        group.generate_group_list(
+            config=cfg,
+            path=os.path.join(generated, 'groups'),
+            )
     authorized_keys = util.getSSHAuthorizedKeysPath(config=cfg)
     ssh.writeAuthorizedKeys(
         path=authorized_keys,

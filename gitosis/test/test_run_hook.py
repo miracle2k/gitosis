@@ -60,6 +60,7 @@ description = blah blah
     cfg = RawConfigParser()
     cfg.add_section('gitosis')
     cfg.set('gitosis', 'repositories', repos)
+    cfg.set('gitosis', 'htaccess', 'yes')
     generated = os.path.join(tmp, 'generated')
     os.mkdir(generated)
     cfg.set('gitosis', 'generate-files-in', generated)

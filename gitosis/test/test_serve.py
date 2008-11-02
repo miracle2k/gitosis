@@ -480,6 +480,29 @@ def test_push_inits_sets_export_ok():
     path = os.path.join(repositories, 'foo.git', 'git-daemon-export-ok')
     assert os.path.exists(path)
 
+def test_push_inits_sets_htaccess():
+    tmp = util.maketemp()
+    cfg = RawConfigParser()
+    cfg.add_section('gitosis')
+    repositories = os.path.join(tmp, 'repositories')
+    os.mkdir(repositories)
+    cfg.set('gitosis', 'repositories', repositories)
+    cfg.set('gitosis', 'htaccess', 'yes')
+    generated = os.path.join(tmp, 'generated')
+    os.mkdir(generated)
+    cfg.set('gitosis', 'generate-files-in', generated)
+    cfg.add_section('group foo')
+    cfg.set('group foo', 'members', 'jdoe')
+    cfg.set('group foo', 'writable', 'foo')
+    serve.serve(
+        cfg=cfg,
+        user='jdoe',
+        command="git-receive-pack 'foo'",
+        )
+    eq(os.listdir(repositories), ['foo.git'])
+    path = os.path.join(repositories, 'foo.git', '.htaccess')
+    assert os.path.exists(path)
+
 def test_absolute():
     # as the only convenient way to use non-standard SSH ports with
     # git is via the ssh://user@host:port/path syntax, and that syntax

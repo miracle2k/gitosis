@@ -12,6 +12,7 @@ from gitosis import access
 from gitosis import repository
 from gitosis import gitweb
 from gitosis import gitdaemon
+from gitosis import htaccess
 from gitosis import app
 from gitosis import util
 
@@ -152,6 +153,9 @@ def serve(
             path=os.path.join(generated, 'projects.list'),
             )
         gitdaemon.set_export_ok(
+            config=cfg,
+            )
+        htaccess.gen_htaccess_if_enabled(
             config=cfg,
             )
 

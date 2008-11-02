@@ -148,6 +148,34 @@ def test_base_local():
         config=cfg, user='jdoe', mode='writable', path='foo/bar'),
        ('some/relative/path', 'baz/quux/thud'))
 
+def test_list_map():
+    cfg = RawConfigParser()
+    cfg.add_section('group fooers')
+    cfg.set('group fooers', 'members', 'jdoe')
+    cfg.set('group fooers', 'map writable foo/bar', 'baz/quux/thud')
+    cfg.add_section('group mooers')
+    cfg.set('group mooers', 'readonly', 'baz/quux/thud')
+    users = set()
+    groups = set()
+    access.listAccess(cfg,'writable','baz/quux/thud',users,groups)
+    eq(sorted(groups), ['fooers'])
+    eq(sorted(users), [])
+
+def test_list_read():
+    cfg = RawConfigParser()
+    cfg.add_section('group fooers')
+    cfg.set('group fooers', 'members', 'jdoe')
+    cfg.set('group fooers', 'map writable foo/bar', 'baz/quux/thud')
+    cfg.add_section('group mooers')
+    cfg.set('group mooers', 'readonly', 'baz/quux/thud')
+    cfg.add_section('user jdoe')
+    cfg.set('user jdoe', 'readonly', 'baz/quux/thud')
+    users = set()
+    groups = set()
+    access.listAccess(cfg,'readonly','baz/quux/thud',users,groups)
+    eq(sorted(groups), ['mooers'])
+    eq(sorted(users), ['jdoe'])
+
 def test_dotgit():
     # a .git extension is always allowed to be added
     cfg = RawConfigParser()

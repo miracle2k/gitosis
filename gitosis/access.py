@@ -101,3 +101,42 @@ def haveAccess(config, user, mode, path):
                 path=mapping,
                 ))
             return (prefix, mapping)
+
+
+def listAccess(config, mode, path, users, groups):
+    """
+    List users and groups who can access the path.
+
+    Note for read-only access, the caller should check for write
+    access too.
+    """
+
+    basename, ext = os.path.splitext(path)
+    if ext == '.git':
+        path = basename
+
+    for sectname in config.sections():
+        GROUP_PREFIX = 'group '
+        USER_PREFIX  = 'user '
+        if sectname.startswith(GROUP_PREFIX):
+            out_set = groups
+            name = sectname[len(GROUP_PREFIX):]
+        elif sectname.startswith(USER_PREFIX):
+            out_set = users
+            name = sectname[len(USER_PREFIX):]
+        else:
+            continue
+
+        try:
+            repos = config.get(sectname, mode)
+        except (NoSectionError, NoOptionError):
+            repos = []
+        else:
+            repos = repos.split()
+
+        if path in repos:
+            out_set.add(name)
+        else:
+            for (iname, ivalue) in config.items(sectname):
+                if ivalue == path and iname.startswith('map %s ' % mode):
+                    out_set.add(name)
