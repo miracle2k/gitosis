@@ -11,7 +11,6 @@ import sys, os, re
 from ConfigParser import NoSectionError, NoOptionError
 
 from gitosis import access
-from gitosis import configutil
 from gitosis import repository
 from gitosis import gitweb
 from gitosis import gitdaemon
@@ -61,9 +60,14 @@ def auto_init_repo(cfg,topdir,repopath):
     # create leading directories
     p = topdir
 
-    newdirmode = configutil.get_default(cfg, 'repo %s' % (relpath, ), 'dirmode', None)
-    if newdirmode is None:
-        newdirmode = configutil.get_default(cfg, 'gitosis', 'dirmode', 0750)
+    assert repopath.endswith('.git'), 'must have .git extension'
+    try:
+        newdirmode = int(str(cfg.get('repo %s' % (repopath[:-4], ), 'dirmode')), 8)
+    except (NoSectionError, NoOptionError):
+        try:
+            newdirmode = int(str(cfg.get('defaults', 'dirmode')), 8)
+        except (NoSectionError, NoOptionError):
+            newdirmode = 0750
 
     for segment in repopath.split(os.sep)[:-1]:
         p = os.path.join(p, segment)
@@ -74,7 +78,7 @@ def auto_init_repo(cfg,topdir,repopath):
     # init using a custom template, if required
     try:
         template = cfg.get('gitosis', 'init-template')
-        repository.init(path=fullpath,template=template)
+        repository.init(path=fullpath, template=template, mode=newdirmode)
     except (NoSectionError, NoOptionError):
         pass
 
