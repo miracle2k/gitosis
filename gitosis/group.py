@@ -72,12 +72,10 @@ def listMembers(config, group, mset):
             members = members.split()
 
         for user in members:
-            if user in mset:
-                pass
+            if user.startswith('@'):
+                listMembers(config, user[1:], mset)
             else:
                 mset.add(user)
-                if user.startswith('@'):
-                    listMembers(config,user[1:],mset)
 
 
 def generate_group_list_fp(config, fp):
@@ -98,10 +96,9 @@ def generate_group_list_fp(config, fp):
         if group == 'all':
             continue
 
-        items = set()
-        listMembers(config,group,items)
+        users = set()
+        listMembers(config, group, users)
 
-        users = filter(lambda u: not u.startswith('@'), items)
         line = group + ': ' + ' '.join(sorted(users))
         print >>fp, line
 

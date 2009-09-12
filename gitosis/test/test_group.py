@@ -144,7 +144,7 @@ def test_groupList_multiple():
     cfg.add_section('group all')
     cfg.set('group all', 'readonly', 'zap')
     cfg.add_section('group foo')
-    cfg.set('group foo', 'members', 'a b @bar')
+    cfg.set('group foo', 'members', 'a b c @bar')
     cfg.add_section('group bar')
     cfg.set('group bar', 'members', 'c d')
     cfg.add_section('group baz')
