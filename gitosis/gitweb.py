@@ -52,7 +52,7 @@ def generate_project_list_fp(config, fp):
     repositories = util.getRepositoryDir(config)
 
     try:
-        global_enable = config.getboolean('gitosis', 'gitweb')
+        global_enable = config.getboolean('defaults', 'gitweb')
     except (NoSectionError, NoOptionError):
         global_enable = False
 

@@ -70,8 +70,8 @@ foo%2Fbar John+Doe
 
 def test_projectsList_multiple_globalGitwebYes():
     cfg = RawConfigParser()
-    cfg.add_section('gitosis')
-    cfg.set('gitosis', 'gitweb', 'yes')
+    cfg.add_section('defaults')
+    cfg.set('defaults', 'gitweb', 'yes')
     cfg.add_section('repo foo/bar')
     cfg.set('repo foo/bar', 'owner', 'John Doe')
     cfg.add_section('repo quux')

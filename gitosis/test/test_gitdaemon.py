@@ -141,7 +141,8 @@ def test_git_daemon_export_ok_allowed_global():
     cfg = RawConfigParser()
     cfg.add_section('gitosis')
     cfg.set('gitosis', 'repositories', tmp)
-    cfg.set('gitosis', 'daemon', 'yes')
+    cfg.add_section('defaults')
+    cfg.set('defaults', 'daemon', 'yes')
     cfg.add_section('repo foo')
     cfg.add_section('repo quux')
     # same as default, no effect

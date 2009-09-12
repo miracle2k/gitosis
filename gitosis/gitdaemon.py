@@ -38,7 +38,7 @@ def set_export_ok(config):
     repositories = util.getRepositoryDir(config)
 
     try:
-        global_enable = config.getboolean('gitosis', 'daemon')
+        global_enable = config.getboolean('defaults', 'daemon')
     except (NoSectionError, NoOptionError):
         global_enable = False
     log.debug(
