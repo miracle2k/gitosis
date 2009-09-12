@@ -83,7 +83,7 @@ def set_export_ok(config):
         )
 
     try:
-        enable_if_all = config.getboolean('gitosis', 'daemon-if-all')
+        enable_if_all = config.getboolean('defaults', 'daemon-if-all')
     except (NoSectionError, NoOptionError):
         enable_if_all = False
     log.debug(
