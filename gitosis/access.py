@@ -1,5 +1,4 @@
 import os, logging
-from ConfigParser import NoSectionError, NoOptionError
 from fnmatch import fnmatch
 
 from gitosis import group
@@ -65,12 +64,11 @@ def haveAccess(config, user, mode, path):
                 ))
             mapping = path
         else:
-            try:
-                mapping = config.get(sectname,
-                                     'map %s %s' % (mode, path))
-            except (NoSectionError, NoOptionError):
-                pass
-            else:
+            mapping = util.getConfigDefault(config,
+                                            sectname,
+                                            'map %s %s' % (mode, path),
+                                            None)
+            if mapping:
                 log.debug(
                     'Access ok for %(user)r as %(mode)r on %(path)r=%(mapping)r'
                     % dict(
@@ -81,14 +79,11 @@ def haveAccess(config, user, mode, path):
                     ))
 
         if mapping is not None:
-            prefix = None
-            try:
-                prefix = config.get(sectname, 'repositories')
-            except (NoSectionError, NoOptionError):
-                try:
-                    prefix = config.get('gitosis', 'repositories')
-                except (NoSectionError, NoOptionError):
-                    prefix = 'repositories'
+            prefix = util.getConfigDefault(config,
+                                           sectname,
+                                           'repositories',
+                                           'repositories',
+                                           'gitosis')
 
             log.debug(
                 'Using prefix %(prefix)r for %(path)r'

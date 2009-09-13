@@ -2,8 +2,6 @@ import errno
 import logging
 import os
 
-from ConfigParser import NoSectionError, NoOptionError
-
 log = logging.getLogger('gitosis.htaccess')
 
 from gitosis import util
@@ -60,10 +58,7 @@ def gen_htaccess(config):
 
 
 def gen_htaccess_if_enabled(config):
-    try:
-        do_htaccess = config.getboolean('gitosis', 'htaccess')
-    except (NoSectionError, NoOptionError):
-        do_htaccess = False
+    do_htaccess = util.getConfigDefaultBoolean(config, 'gitosis', 'htaccess', False)
 
     if do_htaccess:
         gen_htaccess(config)

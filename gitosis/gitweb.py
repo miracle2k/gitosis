@@ -27,8 +27,6 @@ To plug this into ``gitweb``, you have two choices.
 
 import os, urllib, logging
 
-from ConfigParser import NoSectionError, NoOptionError
-
 from gitosis import util
 
 def _escape_filename(s):
@@ -73,17 +71,10 @@ def generate_project_list_fp(config, fp):
     """
     log = logging.getLogger('gitosis.gitweb.generate_projects_list')
 
-    try:
-        global_enable = config.getboolean('defaults', 'gitweb')
-    except (NoSectionError, NoOptionError):
-        global_enable = False
+    global_enable = util.getConfigDefaultBoolean(config, 'defaults', 'gitweb', False)
 
     for (section, name, topdir, subpath) in enum_cfg_repos(config):
-        try:
-            enable = config.getboolean(section, 'gitweb')
-        except (NoSectionError, NoOptionError):
-            enable = global_enable
-
+        enable = util.getConfigDefaultBoolean(config, section, 'gitweb', global_enable)
         if not enable:
             continue
 
@@ -96,16 +87,11 @@ def generate_project_list_fp(config, fp):
             subpath = name
 
         response = [subpath]
-        try:
-            owner = config.get(section, 'owner')
-        except (NoSectionError, NoOptionError):
-            pass
-        else:
-            try:
-                username = config.get('user %s' % owner, 'name')
-            except (NoSectionError, NoOptionError):
-                pass
-            else:
+
+        owner = util.getConfigDefault(config, section, 'owner', None)
+        if owner:
+            username = util.getConfigDefault(config, 'user %s' % owner, 'name', None)
+            if username:
                 response.append(username)
             response.append(owner)
 
@@ -140,11 +126,7 @@ def set_descriptions(config):
     log = logging.getLogger('gitosis.gitweb.set_descriptions')
 
     for (section, name, topdir, subpath) in enum_cfg_repos(config):
-        try:
-            description = config.get(section, 'description')
-        except (NoSectionError, NoOptionError):
-            continue
-
+        description = util.getConfigDefault(config, section, 'description', None)
         if not description:
             continue
 

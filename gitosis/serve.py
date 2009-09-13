@@ -61,13 +61,15 @@ def auto_init_repo(cfg,topdir,repopath):
     p = topdir
 
     assert repopath.endswith('.git'), 'must have .git extension'
-    try:
-        newdirmode = int(str(cfg.get('repo %s' % (repopath[:-4], ), 'dirmode')), 8)
-    except (NoSectionError, NoOptionError):
-        try:
-            newdirmode = int(str(cfg.get('defaults', 'dirmode')), 8)
-        except (NoSectionError, NoOptionError):
-            newdirmode = 0750
+    newdirmode = util.getConfigDefault(cfg,
+                                       'repo %s' % repopath[:-4],
+                                       'dirmode',
+                                       None,
+                                       'defaults')
+    if newdirmode is not None:
+        newdirmode = int(newdirmode, 8)
+    else:
+        newdirmode = 0750
 
     for segment in repopath.split(os.sep)[:-1]:
         p = os.path.join(p, segment)

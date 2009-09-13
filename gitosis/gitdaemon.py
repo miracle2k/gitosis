@@ -73,21 +73,15 @@ def walk_repos(config):
 
 
 def set_export_ok(config):
-    try:
-        global_enable = config.getboolean('defaults', 'daemon')
-    except (NoSectionError, NoOptionError):
-        global_enable = False
+    global_enable = util.getConfigDefaultBoolean(config, 'defaults', 'daemon', False)
     log.debug(
         'Global default is %r',
         {True: 'allow', False: 'deny'}.get(global_enable),
         )
 
-    try:
-        enable_if_all = config.getboolean('defaults', 'daemon-if-all')
-        if enable_if_all:
-            access_table = access.getAccessTable(config)
-    except (NoSectionError, NoOptionError):
-        enable_if_all = False
+    enable_if_all = util.getConfigDefaultBoolean(config, 'defaults', 'daemon-if-all', False)
+    if enable_if_all:
+        access_table = access.getAccessTable(config)
     log.debug(
         'If accessible to @all: %r',
         {True: 'allow', False: 'unchanged'}.get(enable_if_all),

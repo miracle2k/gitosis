@@ -8,8 +8,6 @@ import os
 import sys
 import shutil
 
-from ConfigParser import NoSectionError, NoOptionError
-
 from gitosis import repository
 from gitosis import ssh
 from gitosis import gitweb
@@ -21,11 +19,7 @@ from gitosis import group
 from gitosis import serve
 
 def autoinit_repos(config):
-    try:
-        do_init = config.getboolean('gitosis', 'init-on-config')
-    except (NoSectionError, NoOptionError):
-        do_init = False
-
+    do_init = util.getConfigDefaultBoolean(config, 'gitosis', 'init-on-config', False)
     if not do_init:
         return
 
