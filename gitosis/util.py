@@ -34,3 +34,9 @@ def getSSHAuthorizedKeysPath(config):
     except (NoSectionError, NoOptionError):
         path = os.path.expanduser('~/.ssh/authorized_keys')
     return path
+
+def getConfigList(config, section, entry):
+    try:
+        return config.get(section, entry).split()
+    except (NoSectionError, NoOptionError):
+        return []

@@ -1,5 +1,5 @@
 import os, logging
-from ConfigParser import NoSectionError, NoOptionError
+from gitosis import util
 
 def _getMembership(config, user, seen):
     log = logging.getLogger('gitosis.group.getMembership')
@@ -12,12 +12,7 @@ def _getMembership(config, user, seen):
         if group in seen:
             continue
 
-        try:
-            members = config.get(section, 'members')
-        except (NoSectionError, NoOptionError):
-            members = []
-        else:
-            members = members.split()
+        members = util.getConfigList(config, section, 'members')
 
         # @all is the only group where membership needs to be
         # bootstrapped like this, anything else gets started from the
@@ -64,12 +59,7 @@ def listMembers(config, group, mset):
     """
 
     if group <> 'all':
-        try:
-            members = config.get('group %s' % group, 'members')
-        except (NoSectionError, NoOptionError):
-            members = []
-        else:
-            members = members.split()
+        members = util.getConfigList(config, 'group %s' % group, 'members')
 
         for user in members:
             mset.add(user)

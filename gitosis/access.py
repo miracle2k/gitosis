@@ -3,6 +3,7 @@ from ConfigParser import NoSectionError, NoOptionError
 from fnmatch import fnmatch
 
 from gitosis import group
+from gitosis import util
 
 def pathMatchPatterns(path, repos):
     """
@@ -50,12 +51,7 @@ def haveAccess(config, user, mode, path):
     sections.insert(0, 'user %s' % user)
 
     for sectname in sections:
-        try:
-            repos = config.get(sectname, mode)
-        except (NoSectionError, NoOptionError):
-            repos = []
-        else:
-            repos = repos.split()
+        repos = util.getConfigList(config, sectname, mode)
 
         mapping = None
 
@@ -128,13 +124,7 @@ def cacheAccess(config, mode, cache):
         else:
             continue
 
-        try:
-            repos = config.get(sectname, mode)
-        except (NoSectionError, NoOptionError):
-            repos = []
-        else:
-            repos = repos.split()
-
+        repos = util.getConfigList(config, sectname, mode)
         for (iname, ivalue) in config.items(sectname):
             if iname.startswith('map %s ' % mode):
                 repos.append(ivalue)
