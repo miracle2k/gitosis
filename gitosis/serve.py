@@ -30,6 +30,7 @@ COMMANDS_READONLY = [
 COMMANDS_WRITE = [
     'git-receive-pack',
     'git receive-pack',
+    'git cvsserver'
     ]
 
 class ServingError(Exception):
@@ -114,6 +115,14 @@ def serve(
         and verb not in COMMANDS_READONLY):
         raise UnknownCommandError()
 
+    if verb == 'git cvsserver':
+        # The client will try to run "git cvsserver 'foo.git' server",
+        # so we need to strip that extra 'server', and restore it with
+        # other options later
+        args, server = args.split(None, 1)
+        if server != 'server':
+            raise UnknownCommandError()
+
     match = ALLOW_RE.match(args)
     if match is None:
         raise UnsafeArgumentsError()
@@ -184,6 +193,14 @@ def serve(
         htaccess.gen_htaccess_if_enabled(
             config=cfg,
             )
+
+    if verb == 'git cvsserver':
+        # Allow authenticated CVS access to all repositories, so that
+        # we needn't generate the configuration with
+        # [gitcvs]
+        #     enabled = 1
+        verb = '%s %s %s %s' % \
+        (verb, '--export-all --base-path', topdir, 'server')
 
     # put the verb back together with the new path
     newcmd = "%(verb)s '%(path)s'" % dict(

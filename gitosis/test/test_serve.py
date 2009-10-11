@@ -247,6 +247,22 @@ def test_simple_write_space():
         )
     eq(got, "git receive-pack '%s/foo.git'" % tmp)
 
+def test_simple_cvsserver():
+    tmp = util.maketemp()
+    repository.init(os.path.join(tmp, 'foo.git'))
+    cfg = RawConfigParser()
+    cfg.add_section('gitosis')
+    cfg.set('gitosis', 'repositories', tmp)
+    cfg.add_section('group foo')
+    cfg.set('group foo', 'members', 'jdoe')
+    cfg.set('group foo', 'writable', 'foo')
+    got = serve.serve(
+        cfg=cfg,
+        user='jdoe',
+        command="git cvsserver 'foo' server",
+        )
+    eq(got, "git cvsserver --export-all --base-path %s server '%s/foo.git'" % (tmp, tmp))
+
 def test_push_inits_if_needed():
     # a push to a non-existent repository (but where config authorizes
     # you to do that) will create the repository on the fly
