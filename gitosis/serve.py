@@ -200,7 +200,7 @@ def serve(
         # [gitcvs]
         #     enabled = 1
         verb = '%s %s %s' % \
-        ('"cvs server"', '--export-all --base-path', topdir)
+        ('cvs server', '--export-all --base-path', topdir)
 
     # put the verb back together with the new path
     newcmd = "%(verb)s '%(path)s'" % dict(
