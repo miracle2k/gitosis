@@ -30,7 +30,7 @@ COMMANDS_READONLY = [
 COMMANDS_WRITE = [
     'git-receive-pack',
     'git receive-pack',
-    'git cvsserver'
+    'cvs server'
     ]
 
 class ServingError(Exception):
@@ -115,13 +115,14 @@ def serve(
         and verb not in COMMANDS_READONLY):
         raise UnknownCommandError()
 
-    if verb == 'git cvsserver':
-        # The client will try to run "git cvsserver 'foo.git' server",
-        # so we need to strip that extra 'server', and restore it with
-        # other options later
-        args, server = args.split(None, 1)
-        if server != 'server':
-            raise UnknownCommandError()
+    if verb == 'cvs server':
+        # Put the allowed (writable) repositories and the base path in
+        # the environment
+        #putenv('GIT_CVSSERVER_BASE_PATH', repositories)
+        #writable_repos = access.getAccessTable(cfg, ['writable', 'writeable'])
+        #putenv('GIT_CVSSERVER_ROOT', writable_repositories.join(','))
+
+        return verb
 
     match = ALLOW_RE.match(args)
     if match is None:
@@ -193,14 +194,6 @@ def serve(
         htaccess.gen_htaccess_if_enabled(
             config=cfg,
             )
-
-    if verb == 'git cvsserver':
-        # Allow authenticated CVS access to all repositories, so that
-        # we needn't generate the configuration with
-        # [gitcvs]
-        #     enabled = 1
-        verb = '%s %s %s' % \
-        ('cvs server', '--export-all --base-path', topdir)
 
     # put the verb back together with the new path
     newcmd = "%(verb)s '%(path)s'" % dict(
