@@ -1,3 +1,10 @@
+gitosis (0.2+charm4) unstable; urgency=low
+
+  * Non-maintainer upload.
+  * All the merged changes, and maybe CVS frontend compatibility
+
+ -- Phil Miller <mille121@illinois.edu>  Tue, 13 Oct 2009 22:25:24 -0500
+
 gitosis (0.2) unstable; urgency=low
 
   * Fix initial push syntax in README. Needs to say "refs/heads/".

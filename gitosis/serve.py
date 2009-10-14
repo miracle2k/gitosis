@@ -17,6 +17,7 @@ from gitosis import gitdaemon
 from gitosis import htaccess
 from gitosis import app
 from gitosis import util
+from gitosis import group
 
 log = logging.getLogger('gitosis.serve')
 
@@ -102,6 +103,19 @@ def serve(
         # if/when needed
         raise UnknownCommandError()
 
+    if verb == 'cvs' and args == 'server':
+        # Put the allowed (writable) repositories and the base path in
+        # the environment
+        os.environ['GIT_CVSSERVER_BASE_PATH'] = util.getRepositoryDir(cfg)
+        cache = access.getAccessTable(cfg, ['writable', 'writeable'])
+        writable_repos = set([path for (mode, path) in cache 
+                                   if (user in cache[mode,path][0]) or 
+                                   (len(set(group.getMembership(cfg, user)).intersection(
+                                    (cache[mode,path][1])))) != 0])
+        os.environ['GIT_CVSSERVER_ROOT'] =  ','.join(writable_repos)
+
+        return 'cvs server'
+
     if verb == 'git':
         try:
             subverb, args = args.split(None, 1)
@@ -114,15 +128,6 @@ def serve(
     if (verb not in COMMANDS_WRITE
         and verb not in COMMANDS_READONLY):
         raise UnknownCommandError()
-
-    if verb == 'cvs server':
-        # Put the allowed (writable) repositories and the base path in
-        # the environment
-        #putenv('GIT_CVSSERVER_BASE_PATH', repositories)
-        #writable_repos = access.getAccessTable(cfg, ['writable', 'writeable'])
-        #putenv('GIT_CVSSERVER_ROOT', writable_repositories.join(','))
-
-        return verb
 
     match = ALLOW_RE.match(args)
     if match is None:
@@ -173,8 +178,7 @@ def serve(
            'git extension should have been stripped: %r' % relpath
     repopath = '%s.git' % relpath
     fullpath = os.path.join(topdir, repopath)
-    if (not os.path.exists(fullpath)
-        and verb in COMMANDS_WRITE):
+    if not os.path.exists(fullpath):
         # it doesn't exist on the filesystem, but the configuration
         # refers to it, we're serving a write request, and the user is
         # authorized to do that: create the repository on the fly

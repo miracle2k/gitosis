@@ -283,9 +283,11 @@ def test_simple_cvsserver():
     got = serve.serve(
         cfg=cfg,
         user='jdoe',
-        command="git cvsserver 'foo' server",
+        command="cvs server",
         )
-    eq(got, "cvs server --export-all --base-path %s '%s/foo.git'" % (tmp, tmp))
+    eq(got, "cvs server")
+    eq(os.environ['GIT_CVSSERVER_BASE_PATH'], tmp)
+    eq(os.environ['GIT_CVSSERVER_ROOT'], 'foo')
 
 def test_push_inits_if_needed():
     # a push to a non-existent repository (but where config authorizes
