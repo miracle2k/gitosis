@@ -106,12 +106,15 @@ def serve(
     if verb == 'cvs' and args == 'server':
         # Put the allowed (writable) repositories and the base path in
         # the environment
-        os.environ['GIT_CVSSERVER_BASE_PATH'] = util.getRepositoryDir(cfg)
+        repos_dir = util.getRepositoryDir(cfg)
+        os.environ['GIT_CVSSERVER_BASE_PATH'] = repos_dir
         cache = access.getAccessTable(cfg, ['writable', 'writeable'])
         writable_repos = set([path for (mode, path) in cache 
                                    if (user in cache[mode,path][0]) or 
                                    (len(set(group.getMembership(cfg, user)).intersection(
                                     (cache[mode,path][1])))) != 0])
+        writable_repos = [os.path.join(repos_dir, path) 
+                          for path in writable_repos]
         os.environ['GIT_CVSSERVER_ROOT'] =  ','.join(writable_repos)
 
         return 'cvs server'

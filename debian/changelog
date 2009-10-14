@@ -1,3 +1,10 @@
+gitosis (0.2+charm6) hardy; urgency=low
+
+  * Non-maintainer upload.
+  * Pass the full paths to allowed repositories in the environment
+
+ -- Philip Miller <phil@charm.cs.uiuc.edu>  Wed, 14 Oct 2009 16:56:48 -0500
+
 gitosis (0.2+charm5) hardy; urgency=low
 
   * Non-maintainer upload.
