@@ -1,3 +1,10 @@
+gitosis (0.2+charm5) hardy; urgency=low
+
+  * Non-maintainer upload.
+  * Log the command being run as a list
+
+ -- Philip Miller <phil@charm.cs.uiuc.edu>  Wed, 14 Oct 2009 12:03:57 -0500
+
 gitosis (0.2+charm4) unstable; urgency=low
 
   * Non-maintainer upload.
