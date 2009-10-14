@@ -244,7 +244,8 @@ class Main(app.App):
             main_log.error('%s', e)
             sys.exit(1)
 
-        main_log.debug('Serving %s', newcmd)
-        os.execvp('git', ['git', 'shell', '-c', newcmd])
+        command = ['git', 'shell', '-c', newcmd]
+        main_log.info('Serving %s', str(command))
+        os.execvp('git', command)
         main_log.error('Cannot execute git-shell.')
         sys.exit(1)
