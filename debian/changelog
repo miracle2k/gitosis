@@ -1,3 +1,10 @@
+gitosis (0.2+charm7) hardy; urgency=low
+
+  * Non-maintainer upload.
+  * Tack on '.git' to the repository paths.
+
+ -- Philip Miller <phil@charm.cs.uiuc.edu>  Wed, 14 Oct 2009 17:06:24 -0500
+
 gitosis (0.2+charm6) hardy; urgency=low
 
   * Non-maintainer upload.

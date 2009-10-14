@@ -113,7 +113,7 @@ def serve(
                                    if (user in cache[mode,path][0]) or 
                                    (len(set(group.getMembership(cfg, user)).intersection(
                                     (cache[mode,path][1])))) != 0])
-        writable_repos = [os.path.join(repos_dir, path) 
+        writable_repos = [os.path.join(repos_dir, '%s.git' % path) 
                           for path in writable_repos]
         os.environ['GIT_CVSSERVER_ROOT'] =  ','.join(writable_repos)
 

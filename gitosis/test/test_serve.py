@@ -288,7 +288,7 @@ def test_simple_cvsserver():
     eq(got, "cvs server")
     base = os.environ['GIT_CVSSERVER_BASE_PATH']
     eq(base, tmp)
-    eq(os.environ['GIT_CVSSERVER_ROOT'], os.path.join(base, 'foo'))
+    eq(os.environ['GIT_CVSSERVER_ROOT'], os.path.join(base, 'foo.git'))
 
 def test_push_inits_if_needed():
     # a push to a non-existent repository (but where config authorizes
