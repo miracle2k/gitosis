@@ -31,7 +31,6 @@ COMMANDS_READONLY = [
 COMMANDS_WRITE = [
     'git-receive-pack',
     'git receive-pack',
-    'cvs server'
     ]
 
 class ServingError(Exception):
@@ -88,56 +87,14 @@ def auto_init_repo(cfg,topdir,repopath):
 
     repository.init(path=fullpath, mode=newdirmode)
 
-def serve(
-    cfg,
-    user,
-    command,
-    ):
-    if '\n' in command:
-        raise CommandMayNotContainNewlineError()
-
-    try:
-        verb, args = command.split(None, 1)
-    except ValueError:
-        # all known "git-foo" commands take one argument; improve
-        # if/when needed
-        raise UnknownCommandError()
-
-    if verb == 'cvs' and args == 'server':
-        # Put the allowed (writable) repositories and the base path in
-        # the environment
-        repos_dir = util.getRepositoryDir(cfg)
-        os.environ['GIT_CVSSERVER_BASE_PATH'] = repos_dir
-        cache = access.getAccessTable(cfg, ['writable', 'writeable'])
-        writable_repos = set([path for (mode, path) in cache 
-                                   if (user in cache[mode,path][0]) or 
-                                   (len(set(group.getMembership(cfg, user)).intersection(
-                                    (cache[mode,path][1])))) != 0])
-        writable_repos = [os.path.join(repos_dir, '%s.git' % path) 
-                          for path in writable_repos]
-        os.environ['GIT_CVSSERVER_ROOTS'] =  ','.join(writable_repos)
-
-        return 'cvs server'
-
-    if verb == 'git':
-        try:
-            subverb, args = args.split(None, 1)
-        except ValueError:
-            # all known "git foo" commands take one argument; improve
-            # if/when needed
-            raise UnknownCommandError()
-        verb = '%s %s' % (verb, subverb)
-
-    if (verb not in COMMANDS_WRITE
-        and verb not in COMMANDS_READONLY):
-        raise UnknownCommandError()
-
+def path_from_args(args):
     match = ALLOW_RE.match(args)
     if match is None:
         raise UnsafeArgumentsError()
 
-    path = match.group('path')
+    return match.group('path')
 
+def path_for_write(cfg, user, path):
     # write access is always sufficient
     newpath = access.haveAccess(
         config=cfg,
@@ -160,6 +117,75 @@ def serve(
                 path,
                 )
 
+    return newpath
+
+def construct_path(newpath):
+    (topdir, relpath) = newpath
+    assert not relpath.endswith('.git'), \
+           'git extension should have been stripped: %r' % relpath
+    repopath = '%s.git' % relpath
+    fullpath = os.path.join(topdir, repopath)
+
+    return fullpath
+
+def serve(
+    cfg,
+    user,
+    command,
+    ):
+    if '\n' in command:
+        raise CommandMayNotContainNewlineError()
+
+    try:
+        verb, args = command.split(None, 1)
+    except ValueError:
+        # all known "git-foo" commands take one argument; improve
+        # if/when needed
+        raise UnknownCommandError()
+
+    if verb == 'git':
+        try:
+            subverb, args = args.split(None, 1)
+        except ValueError:
+            # all known "git foo" commands take one argument; improve
+            # if/when needed
+            raise UnknownCommandError()
+        verb = '%s %s' % (verb, subverb)
+    elif verb == 'cvs':
+        try:
+            args, server = args.split(None, 1)
+        except:
+            raise UnknownCommandError()
+        if server != 'server':
+            raise UnknownCommandError()
+
+        path = path_from_args(args)
+        print path
+        newpath = path_for_write(cfg=cfg, user=user, path=path)
+        if newpath is None:
+            raise WriteAccessDenied()
+
+        fullpath = construct_path(newpath)
+
+        # Put the repository and base path in the environment
+        repos_dir = util.getRepositoryDir(cfg)
+        os.environ['GIT_CVSSERVER_BASE_PATH'] = repos_dir
+        os.environ['GIT_CVSSERVER_ROOTS'] =  fullpath
+
+        return 'cvs server'
+
+    if (verb not in COMMANDS_WRITE
+        and verb not in COMMANDS_READONLY):
+        raise UnknownCommandError()
+
+    path = path_from_args(args)
+
+    # write access is always sufficient
+    newpath = path_for_write(
+        cfg=cfg,
+        user=user,
+        path=path)
+
     if newpath is None:
         # didn't have write access
 
@@ -176,16 +202,13 @@ def serve(
             # didn't have write access and tried to write
             raise WriteAccessDenied()
 
-    (topdir, relpath) = newpath
-    assert not relpath.endswith('.git'), \
-           'git extension should have been stripped: %r' % relpath
-    repopath = '%s.git' % relpath
-    fullpath = os.path.join(topdir, repopath)
+    fullpath = construct_path(newpath)
     if not os.path.exists(fullpath):
         # it doesn't exist on the filesystem, but the configuration
         # refers to it, we're serving a write request, and the user is
         # authorized to do that: create the repository on the fly
-
+        (topdir, relpath) = newpath
+        repopath = '%s.git' % relpath
         auto_init_repo(cfg,topdir,repopath)
         gitweb.set_descriptions(
             config=cfg,

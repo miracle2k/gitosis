@@ -1,3 +1,10 @@
+gitosis (0.2+charm9) hardy; urgency=low
+
+  * Non-maintainer upload.
+  * Refactor CVS support and much of serve.serve()
+
+ -- Philip Miller <phil@charm.cs.uiuc.edu>  Thu, 15 Oct 2009 15:31:44 -0500
+
 gitosis (0.2+charm8) hardy; urgency=low
 
   * Non-maintainer upload.

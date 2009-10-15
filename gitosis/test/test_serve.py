@@ -283,7 +283,7 @@ def test_simple_cvsserver():
     got = serve.serve(
         cfg=cfg,
         user='jdoe',
-        command="cvs server",
+        command="cvs '/foo' server",
         )
     eq(got, "cvs server")
     base = os.environ['GIT_CVSSERVER_BASE_PATH']
