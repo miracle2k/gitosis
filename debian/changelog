@@ -1,3 +1,11 @@
+gitosis (0.2+charm8) hardy; urgency=low
+
+  * Non-maintainer upload.
+  * Rename GIT_CVSSERVER_ROOT -> GIT_CVSSERVER_ROOTS, to reflect its
+    multiple contents.
+
+ -- Philip Miller <phil@charm.cs.uiuc.edu>  Wed, 14 Oct 2009 23:21:11 -0500
+
 gitosis (0.2+charm7) hardy; urgency=low
 
   * Non-maintainer upload.

@@ -115,7 +115,7 @@ def serve(
                                     (cache[mode,path][1])))) != 0])
         writable_repos = [os.path.join(repos_dir, '%s.git' % path) 
                           for path in writable_repos]
-        os.environ['GIT_CVSSERVER_ROOT'] =  ','.join(writable_repos)
+        os.environ['GIT_CVSSERVER_ROOTS'] =  ','.join(writable_repos)
 
         return 'cvs server'
 
