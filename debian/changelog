@@ -1,3 +1,31 @@
+gitosis (0.2+charm13) hardy; urgency=low
+
+  * Non-maintainer upload.
+  * Pull names from configuration for CVS commits
+
+ -- Philip Miller <phil@charm.cs.uiuc.edu>  Thu, 15 Oct 2009 19:27:06 -0500
+
+gitosis (0.2+charm12) hardy; urgency=low
+
+  * Non-maintainer upload.
+  * CVS server now seems to work. Clean up
+
+ -- Philip Miller <phil@charm.cs.uiuc.edu>  Thu, 15 Oct 2009 16:00:33 -0500
+
+gitosis (0.2+charm11) hardy; urgency=low
+
+  * Non-maintainer upload.
+  * Put absolute path in environment for cvsserver
+
+ -- Philip Miller <phil@charm.cs.uiuc.edu>  Thu, 15 Oct 2009 15:56:40 -0500
+
+gitosis (0.2+charm10) hardy; urgency=low
+
+  * Non-maintainer upload.
+  * Try printing out full path as processed and put in the environment
+
+ -- Philip Miller <phil@charm.cs.uiuc.edu>  Thu, 15 Oct 2009 15:51:20 -0500
+
 gitosis (0.2+charm9) hardy; urgency=low
 
   * Non-maintainer upload.

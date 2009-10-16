@@ -280,6 +280,9 @@ def test_simple_cvsserver():
     cfg.add_section('group foo')
     cfg.set('group foo', 'members', 'jdoe')
     cfg.set('group foo', 'writable', 'foo')
+    cfg.add_section('user jdoe')
+    cfg.set('user jdoe', 'name', 'John Doe')
+    cfg.set('user jdoe', 'email', 'jdoe@example.com')
     got = serve.serve(
         cfg=cfg,
         user='jdoe',
@@ -289,6 +292,8 @@ def test_simple_cvsserver():
     base = os.environ['GIT_CVSSERVER_BASE_PATH']
     eq(base, tmp)
     eq(os.environ['GIT_CVSSERVER_ROOTS'], os.path.join(base, 'foo.git'))
+    eq(os.environ['GIT_AUTHOR_NAME'], 'John Doe')
+    eq(os.environ['GIT_AUTHOR_EMAIL'], 'jdoe@example.com')
 
 def test_push_inits_if_needed():
     # a push to a non-existent repository (but where config authorizes

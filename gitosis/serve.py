@@ -124,9 +124,8 @@ def construct_path(newpath):
     assert not relpath.endswith('.git'), \
            'git extension should have been stripped: %r' % relpath
     repopath = '%s.git' % relpath
-    fullpath = os.path.join(topdir, repopath)
 
-    return fullpath
+    return (topdir, repopath)
 
 def serve(
     cfg,
@@ -160,17 +159,29 @@ def serve(
             raise UnknownCommandError()
 
         path = path_from_args(args)
-        print path
+
         newpath = path_for_write(cfg=cfg, user=user, path=path)
         if newpath is None:
             raise WriteAccessDenied()
 
-        fullpath = construct_path(newpath)
+        (topdir, repopath) = construct_path(newpath)
 
         # Put the repository and base path in the environment
         repos_dir = util.getRepositoryDir(cfg)
+        fullpath = os.path.join(repos_dir, repopath)
         os.environ['GIT_CVSSERVER_BASE_PATH'] = repos_dir
-        os.environ['GIT_CVSSERVER_ROOTS'] =  fullpath
+        os.environ['GIT_CVSSERVER_ROOTS'] = fullpath
+
+        # Put the user's information in the environment
+        try:
+            section = 'user %s' % user
+            name = cfg.get(section, 'name')
+            email = cfg.get(section, 'email')
+        except:
+            log.error('Missing name or email for user "%s"' % user)
+            raise WriteAccessDenied()
+        os.environ['GIT_AUTHOR_NAME'] = name
+        os.environ['GIT_AUTHOR_EMAIL'] = email
 
         return 'cvs server'
 
@@ -202,13 +213,12 @@ def serve(
             # didn't have write access and tried to write
             raise WriteAccessDenied()
 
-    fullpath = construct_path(newpath)
+    (topdir, repopath) = construct_path(newpath)
+    fullpath = os.path.join(topdir, repopath)
     if not os.path.exists(fullpath):
         # it doesn't exist on the filesystem, but the configuration
         # refers to it, we're serving a write request, and the user is
         # authorized to do that: create the repository on the fly
-        (topdir, relpath) = newpath
-        repopath = '%s.git' % relpath
         auto_init_repo(cfg,topdir,repopath)
         gitweb.set_descriptions(
             config=cfg,
