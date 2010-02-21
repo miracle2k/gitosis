@@ -591,6 +591,33 @@ def test_push_inits_templates():
     assert (os.path.isfile(os.path.join(path, 'hooks', 'pre-rebase'))
             or os.path.isfile(os.path.join(path, 'hooks', 'pre-rebase.sample')))
 
+def test_push_inits_default_templates():
+    tmp = util.maketemp()
+    cfg = RawConfigParser()
+    cfg.add_section('gitosis')
+    repositories = os.path.join(tmp, 'repositories')
+    os.mkdir(repositories)
+    cfg.set('gitosis', 'repositories', repositories)
+    generated = os.path.join(tmp, 'generated')
+    os.mkdir(generated)
+    cfg.set('gitosis', 'generate-files-in', generated)
+    cfg.add_section('group foo')
+    cfg.set('group foo', 'members', 'jdoe')
+    cfg.set('group foo', 'writable', 'foo')
+    os.umask(0022)
+    serve.serve(
+        cfg=cfg,
+        user='jdoe',
+        command="git-receive-pack 'foo'",
+        )
+    hook_path = os.path.join(tmp, 'repositories', 'foo.git', 'hooks', 'post-receive')
+    check_mode(
+        hook_path,
+        0755,
+        is_file=True,
+        )
+    got = readFile(hook_path)
+    eq(got, '#!/bin/sh\nset -e\ngit-update-server-info\ngitosis-run-hook update-mirrors')
 
 def test_absolute():
     # as the only convenient way to use non-standard SSH ports with

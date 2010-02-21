@@ -5,7 +5,6 @@ import re
 import subprocess
 import sys
 
-from pkg_resources import resource_filename
 from gitosis import util
 
 class GitError(Exception):
@@ -42,9 +41,6 @@ def init(
     """
     if _git is None:
         _git = 'git'
-
-    if template is None:
-        template = resource_filename('gitosis.templates', 'default')
 
     util.mkdir(path, mode)
     args = [

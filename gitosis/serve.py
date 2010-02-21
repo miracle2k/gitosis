@@ -9,6 +9,7 @@ import logging
 import sys, os, re
 
 from ConfigParser import NoSectionError, NoOptionError
+from pkg_resources import resource_filename
 
 from gitosis import access
 from gitosis import repository
@@ -79,12 +80,13 @@ def auto_init_repo(cfg,topdir,repopath):
 
     fullpath = os.path.join(topdir, repopath)
 
-    # init using a custom template, if required
+    # init using a custom template; one specified by the user, or
+    # our default set of templates for new repositories.
     try:
         template = cfg.get('gitosis', 'init-template')
-        repository.init(path=fullpath, template=template, mode=newdirmode)
     except (NoSectionError, NoOptionError):
-        pass
+        template = resource_filename('gitosis.templates', 'default')
+    repository.init(path=fullpath, template=template, mode=newdirmode)
 
     repository.init(path=fullpath, mode=newdirmode)
 
