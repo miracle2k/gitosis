@@ -36,6 +36,13 @@ def test_init_exist_dir():
     check_mode(path, 0710, is_dir=True)
     check_bare(path)
 
+def test_init_custom_perm():
+    tmp = maketemp()
+    path = os.path.join(tmp, 'repo.git')
+    repository.init(path, mode=0711)
+    check_mode(path, 0711, is_dir=True)
+    check_bare(path)
+
 def test_init_exist_git():
     tmp = maketemp()
     path = os.path.join(tmp, 'repo.git')
@@ -63,8 +70,13 @@ def test_init_templates():
         )
     got = readFile(os.path.join(path, 'hooks', 'post-update'))
     eq(got, '#!/bin/sh\n# i can override standard templates\n')
-    # Git doesn't create missing hooks
-    #assert os.path.isfile(os.path.join(path, 'hooks', 'pre-rebase'))
+    # standard templates are there, too
+    assert (
+        # compatibility with git <1.6.0
+        os.path.isfile(os.path.join(path, 'hooks', 'pre-rebase'))
+        # for git >=1.6.0
+        or os.path.isfile(os.path.join(path, 'hooks', 'pre-rebase.sample'))
+        )
 
 def test_init_default_templates():
     tmp = maketemp()

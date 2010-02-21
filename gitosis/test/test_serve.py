@@ -1,5 +1,5 @@
 from nose.tools import eq_ as eq
-from gitosis.test.util import assert_raises
+from gitosis.test.util import assert_raises, readFile, check_mode
 
 import logging
 import os
@@ -215,6 +215,30 @@ def test_simple_read_space():
         )
     eq(got, "git upload-pack '%s/foo.git'" % tmp)
 
+def test_read_inits_if_needed():
+    # a clone of a non-existent repository (but where config
+    # authorizes you to do that) will create the repository on the fly
+    tmp = util.maketemp()
+    cfg = RawConfigParser()
+    cfg.add_section('gitosis')
+    repositories = os.path.join(tmp, 'repositories')
+    os.mkdir(repositories)
+    cfg.set('gitosis', 'repositories', repositories)
+    generated = os.path.join(tmp, 'generated')
+    os.mkdir(generated)
+    cfg.set('gitosis', 'generate-files-in', generated)
+    cfg.add_section('group foo')
+    cfg.set('group foo', 'members', 'jdoe')
+    cfg.set('group foo', 'readonly', 'foo')
+    got = serve.serve(
+        cfg=cfg,
+        user='jdoe',
+        command="git-upload-pack 'foo'",
+        )
+    eq(got, "git-upload-pack '%s/foo.git'" % repositories)
+    eq(os.listdir(repositories), ['foo.git'])
+    assert os.path.isfile(os.path.join(repositories, 'foo.git', 'HEAD'))
+
 def test_simple_write_dash():
     tmp = util.maketemp()
     repository.init(os.path.join(tmp, 'foo.git'))
@@ -246,6 +270,30 @@ def test_simple_write_space():
         command="git receive-pack 'foo'",
         )
     eq(got, "git receive-pack '%s/foo.git'" % tmp)
+
+def test_simple_cvsserver():
+    tmp = util.maketemp()
+    repository.init(os.path.join(tmp, 'foo.git'))
+    cfg = RawConfigParser()
+    cfg.add_section('gitosis')
+    cfg.set('gitosis', 'repositories', tmp)
+    cfg.add_section('group foo')
+    cfg.set('group foo', 'members', 'jdoe')
+    cfg.set('group foo', 'writable', 'foo')
+    cfg.add_section('user jdoe')
+    cfg.set('user jdoe', 'name', 'John Doe')
+    cfg.set('user jdoe', 'email', 'jdoe@example.com')
+    got = serve.serve(
+        cfg=cfg,
+        user='jdoe',
+        command="cvs '/foo' server",
+        )
+    eq(got, "cvs server")
+    base = os.environ['GIT_CVSSERVER_BASE_PATH']
+    eq(base, tmp)
+    eq(os.environ['GIT_CVSSERVER_ROOTS'], os.path.join(base, 'foo.git'))
+    eq(os.environ['GIT_AUTHOR_NAME'], 'John Doe')
+    eq(os.environ['GIT_AUTHOR_EMAIL'], 'jdoe@example.com')
 
 def test_push_inits_if_needed():
     # a push to a non-existent repository (but where config authorizes
@@ -479,6 +527,70 @@ def test_push_inits_sets_export_ok():
     eq(os.listdir(repositories), ['foo.git'])
     path = os.path.join(repositories, 'foo.git', 'git-daemon-export-ok')
     assert os.path.exists(path)
+
+def test_push_inits_sets_htaccess():
+    tmp = util.maketemp()
+    cfg = RawConfigParser()
+    cfg.add_section('gitosis')
+    repositories = os.path.join(tmp, 'repositories')
+    os.mkdir(repositories)
+    cfg.set('gitosis', 'repositories', repositories)
+    cfg.set('gitosis', 'htaccess', 'yes')
+    generated = os.path.join(tmp, 'generated')
+    os.mkdir(generated)
+    cfg.set('gitosis', 'generate-files-in', generated)
+    cfg.add_section('group foo')
+    cfg.set('group foo', 'members', 'jdoe')
+    cfg.set('group foo', 'writable', 'foo')
+    serve.serve(
+        cfg=cfg,
+        user='jdoe',
+        command="git-receive-pack 'foo'",
+        )
+    eq(os.listdir(repositories), ['foo.git'])
+    path = os.path.join(repositories, 'foo.git', '.htaccess')
+    assert os.path.exists(path)
+
+def test_push_inits_templates():
+    tmp = util.maketemp()
+    templatedir = os.path.join(
+        os.path.dirname(__file__),
+        'mocktemplates',
+        )
+    cfg = RawConfigParser()
+    cfg.add_section('gitosis')
+    repositories = os.path.join(tmp, 'repositories')
+    os.mkdir(repositories)
+    cfg.set('gitosis', 'repositories', repositories)
+    cfg.set('gitosis', 'init-template', templatedir)
+    generated = os.path.join(tmp, 'generated')
+    os.mkdir(generated)
+    cfg.set('gitosis', 'generate-files-in', generated)
+    cfg.add_section('group foo')
+    cfg.set('group foo', 'members', 'jdoe')
+    cfg.set('group foo', 'writable', 'foo')
+    os.umask(0022)
+    serve.serve(
+        cfg=cfg,
+        user='jdoe',
+        command="git-receive-pack 'foo'",
+        )
+    eq(os.listdir(repositories), ['foo.git'])
+    path = os.path.join(repositories, 'foo.git')
+    assert os.path.isfile(os.path.join(path, 'HEAD'))
+    got = readFile(os.path.join(path, 'no-confusion'))
+    eq(got, 'i should show up\n')
+    check_mode(
+        os.path.join(path, 'hooks', 'post-update'),
+        0755,
+        is_file=True,
+        )
+    got = readFile(os.path.join(path, 'hooks', 'post-update'))
+    eq(got, '#!/bin/sh\n# i can override standard templates\n')
+    # standard templates are there, too
+    assert (os.path.isfile(os.path.join(path, 'hooks', 'pre-rebase'))
+            or os.path.isfile(os.path.join(path, 'hooks', 'pre-rebase.sample')))
+
 
 def test_absolute():
     # as the only convenient way to use non-standard SSH ports with

@@ -1,5 +1,5 @@
-import logging
-from ConfigParser import NoSectionError, NoOptionError
+import os, logging
+from gitosis import util
 
 def _getMembership(config, user, seen):
     log = logging.getLogger('gitosis.group.getMembership')
@@ -12,12 +12,7 @@ def _getMembership(config, user, seen):
         if group in seen:
             continue
 
-        try:
-            members = config.get(section, 'members')
-        except (NoSectionError, NoOptionError):
-            members = []
-        else:
-            members = members.split()
+        members = util.getConfigList(config, section, 'members')
 
         # @all is the only group where membership needs to be
         # bootstrapped like this, anything else gets started from the
@@ -53,3 +48,67 @@ def getMembership(config, user):
     # everyone is always a member of group "all"
     yield 'all'
 
+
+def listMembers(config, group, mset):
+    """
+    Generate a list of members of a group
+
+    :type config: RawConfigParser
+    :type group: str
+    :param mset: Set of members to amend
+    """
+
+    if group <> 'all':
+        members = util.getConfigList(config, 'group %s' % group, 'members')
+
+        for user in members:
+            mset.add(user)
+            if user.startswith('@'):
+                listMembers(config, user[1:], mset)
+
+
+def generate_group_list_fp(config, fp):
+    """
+    Generate group list for ``gitweb``.
+
+    :param config: configuration to read projects from
+    :type config: RawConfigParser
+
+    :param fp: file to write group list to
+    :type fp: file
+    """
+    for section in config.sections():
+        GROUP_PREFIX = 'group '
+        if not section.startswith(GROUP_PREFIX):
+            continue
+        group = section[len(GROUP_PREFIX):]
+        if group == 'all':
+            continue
+
+        items = set()
+        listMembers(config, group, items)
+
+        users = filter(lambda u: not u.startswith('@'), items)
+        line = group + ': ' + ' '.join(sorted(users))
+        print >>fp, line
+
+
+def generate_group_list(config, path):
+    """
+    Generate group list for ``gitweb``.
+
+    :param config: configuration to read projects from
+    :type config: RawConfigParser
+
+    :param path: path to write group list to
+    :type path: str
+    """
+    tmp = '%s.%d.tmp' % (path, os.getpid())
+
+    f = file(tmp, 'w')
+    try:
+        generate_group_list_fp(config=config, fp=f)
+    finally:
+        f.close()
+
+    os.rename(tmp, path)

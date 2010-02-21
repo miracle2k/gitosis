@@ -148,6 +148,50 @@ def test_base_local():
         config=cfg, user='jdoe', mode='writable', path='foo/bar'),
        ('some/relative/path', 'baz/quux/thud'))
 
+def test_list_map():
+    cfg = RawConfigParser()
+    cfg.add_section('group fooers')
+    cfg.set('group fooers', 'members', 'jdoe')
+    cfg.set('group fooers', 'map writable foo/bar', 'baz/quux/thud')
+    cfg.add_section('group mooers')
+    cfg.set('group mooers', 'readonly', 'baz/quux/thud')
+    table = access.getAccessTable(cfg)
+    users = set()
+    groups = set()
+    access.listAccess(cfg,table,'writable','baz/quux/thud',users,groups)
+    eq(sorted(groups), ['fooers'])
+    eq(sorted(users), [])
+
+def test_list_read():
+    cfg = RawConfigParser()
+    cfg.add_section('group fooers')
+    cfg.set('group fooers', 'members', 'jdoe')
+    cfg.set('group fooers', 'map writable foo/bar', 'baz/quux/thud')
+    cfg.add_section('group mooers')
+    cfg.set('group mooers', 'readonly', 'baz/quux/thud')
+    cfg.add_section('user jdoe')
+    cfg.set('user jdoe', 'readonly', 'baz/quux/thud')
+    table = access.getAccessTable(cfg)
+    users = set()
+    groups = set()
+    access.listAccess(cfg,table,'readonly','baz/quux/thud',users,groups)
+    eq(sorted(groups), ['mooers'])
+    eq(sorted(users), ['jdoe'])
+
+def test_list_all():
+    cfg = RawConfigParser()
+    cfg.add_section('group fooers')
+    cfg.set('group fooers', 'members', 'jdoe')
+    cfg.set('group fooers', 'map writable foo/bar', 'baz/quux/thud')
+    cfg.add_section('group mooers')
+    cfg.set('group mooers', 'members', '@fooers')
+    cfg.set('group mooers', 'readonly', 'baz/quux/thud')
+    table = access.getAccessTable(cfg)
+    (users, groups, all_refs) = access.getAllAccess(cfg,table,'baz/quux/thud',['readonly'])
+    eq(sorted(users), [])
+    eq(sorted(groups), ['mooers'])
+    eq(sorted(all_refs), ['@fooers','@mooers','jdoe'])
+
 def test_dotgit():
     # a .git extension is always allowed to be added
     cfg = RawConfigParser()
@@ -155,4 +199,12 @@ def test_dotgit():
     cfg.set('group fooers', 'members', 'jdoe')
     cfg.set('group fooers', 'writable', 'foo/bar')
     eq(access.haveAccess(config=cfg, user='jdoe', mode='writable', path='foo/bar.git'),
+       ('repositories', 'foo/bar'))
+
+def test_pattern():
+    cfg = RawConfigParser()
+    cfg.add_section('group fooers')
+    cfg.set('group fooers', 'members', 'jdoe')
+    cfg.set('group fooers', 'writable', 'foo/*')
+    eq(access.haveAccess(config=cfg, user='jdoe', mode='writable', path='foo/bar'),
        ('repositories', 'foo/bar'))

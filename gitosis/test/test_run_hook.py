@@ -36,6 +36,7 @@ stuff
         files=[
             ('gitosis.conf', """\
 [gitosis]
+init-on-config = yes
 
 [group gitosis-admin]
 members = theadmin
@@ -48,6 +49,9 @@ daemon = yes
 gitweb = yes
 owner = John Doe
 description = blah blah
+
+[repo initme]
+description = auto-init me
 """),
             ('keydir/jdoe.pub',
              'ssh-somealgo '
@@ -60,6 +64,7 @@ description = blah blah
     cfg = RawConfigParser()
     cfg.add_section('gitosis')
     cfg.set('gitosis', 'repositories', repos)
+    cfg.set('gitosis', 'htaccess', 'yes')
     generated = os.path.join(tmp, 'generated')
     os.mkdir(generated)
     cfg.set('gitosis', 'generate-files-in', generated)
@@ -76,13 +81,22 @@ description = blah blah
         )
     got = readFile(os.path.join(repos, 'forweb.git', 'description'))
     eq(got, 'blah blah\n')
-    got = os.listdir(generated)
-    eq(got, ['projects.list'])
+    got = readFile(os.path.join(repos, 'initme.git', 'description'))
+    eq(got, 'auto-init me\n')
+    got = sorted(os.listdir(generated))
+    eq(got, ['groups', 'projects.list'])
     got = readFile(os.path.join(generated, 'projects.list'))
     eq(
         got,
         """\
 forweb.git John+Doe
+""",
+        )
+    got = readFile(os.path.join(generated, 'groups'))
+    eq(
+        got,
+        """\
+gitosis-admin: theadmin
 """,
         )
     got = os.listdir(os.path.join(repos, 'fordaemon.git'))

@@ -1,3 +1,74 @@
+gitosis (0.2+charm13) hardy; urgency=low
+
+  * Non-maintainer upload.
+  * Pull names from configuration for CVS commits
+
+ -- Philip Miller <phil@charm.cs.uiuc.edu>  Thu, 15 Oct 2009 19:27:06 -0500
+
+gitosis (0.2+charm12) hardy; urgency=low
+
+  * Non-maintainer upload.
+  * CVS server now seems to work. Clean up
+
+ -- Philip Miller <phil@charm.cs.uiuc.edu>  Thu, 15 Oct 2009 16:00:33 -0500
+
+gitosis (0.2+charm11) hardy; urgency=low
+
+  * Non-maintainer upload.
+  * Put absolute path in environment for cvsserver
+
+ -- Philip Miller <phil@charm.cs.uiuc.edu>  Thu, 15 Oct 2009 15:56:40 -0500
+
+gitosis (0.2+charm10) hardy; urgency=low
+
+  * Non-maintainer upload.
+  * Try printing out full path as processed and put in the environment
+
+ -- Philip Miller <phil@charm.cs.uiuc.edu>  Thu, 15 Oct 2009 15:51:20 -0500
+
+gitosis (0.2+charm9) hardy; urgency=low
+
+  * Non-maintainer upload.
+  * Refactor CVS support and much of serve.serve()
+
+ -- Philip Miller <phil@charm.cs.uiuc.edu>  Thu, 15 Oct 2009 15:31:44 -0500
+
+gitosis (0.2+charm8) hardy; urgency=low
+
+  * Non-maintainer upload.
+  * Rename GIT_CVSSERVER_ROOT -> GIT_CVSSERVER_ROOTS, to reflect its
+    multiple contents.
+
+ -- Philip Miller <phil@charm.cs.uiuc.edu>  Wed, 14 Oct 2009 23:21:11 -0500
+
+gitosis (0.2+charm7) hardy; urgency=low
+
+  * Non-maintainer upload.
+  * Tack on '.git' to the repository paths.
+
+ -- Philip Miller <phil@charm.cs.uiuc.edu>  Wed, 14 Oct 2009 17:06:24 -0500
+
+gitosis (0.2+charm6) hardy; urgency=low
+
+  * Non-maintainer upload.
+  * Pass the full paths to allowed repositories in the environment
+
+ -- Philip Miller <phil@charm.cs.uiuc.edu>  Wed, 14 Oct 2009 16:56:48 -0500
+
+gitosis (0.2+charm5) hardy; urgency=low
+
+  * Non-maintainer upload.
+  * Log the command being run as a list
+
+ -- Philip Miller <phil@charm.cs.uiuc.edu>  Wed, 14 Oct 2009 12:03:57 -0500
+
+gitosis (0.2+charm4) unstable; urgency=low
+
+  * Non-maintainer upload.
+  * All the merged changes, and maybe CVS frontend compatibility
+
+ -- Phil Miller <mille121@illinois.edu>  Tue, 13 Oct 2009 22:25:24 -0500
+
 gitosis (0.2) unstable; urgency=low
 
   * Fix initial push syntax in README. Needs to say "refs/heads/".

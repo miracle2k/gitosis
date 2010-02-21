@@ -13,9 +13,29 @@ from gitosis import repository
 from gitosis import ssh
 from gitosis import gitweb
 from gitosis import gitdaemon
+from gitosis import htaccess
 from gitosis import app
 from gitosis import util
+from gitosis import group
 from gitosis import mirror
+from gitosis import serve
+
+def autoinit_repos(config):
+    do_init = util.getConfigDefaultBoolean(config, 'gitosis', 'init-on-config', False)
+    if not do_init:
+        return
+
+    for (section, name, topdir, subpath) in gitweb.enum_cfg_repos(config):
+        if os.path.exists(os.path.join(topdir,subpath)):
+            continue
+
+        try:
+            serve.auto_init_repo(config,topdir,subpath)
+        except GitInitError, e:
+            log.warning('Auto-init failed: %r' % e)
+        except GitError, e:
+            log.warning('Git error in init: %r' % e)
+
 
 def post_update(cfg, git_dir):
     export = os.path.join(git_dir, 'gitosis-export')
@@ -33,6 +53,7 @@ def post_update(cfg, git_dir):
         )
     # re-read config to get up-to-date settings
     cfg.read(os.path.join(export, '..', 'gitosis.conf'))
+    autoinit_repos(config=cfg)
     gitweb.set_descriptions(
         config=cfg,
         )
@@ -44,6 +65,11 @@ def post_update(cfg, git_dir):
     gitdaemon.set_export_ok(
         config=cfg,
         )
+    if htaccess.gen_htaccess_if_enabled(config=cfg):
+        group.generate_group_list(
+            config=cfg,
+            path=os.path.join(generated, 'groups'),
+            )
     authorized_keys = util.getSSHAuthorizedKeysPath(config=cfg)
     ssh.writeAuthorizedKeys(
         path=authorized_keys,

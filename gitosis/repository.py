@@ -21,6 +21,7 @@ def init(
     path,
     template=None,
     _git=None,
+    mode=0750,
     ):
     """
     Create a git repository at C{path} (if missing).
@@ -34,6 +35,10 @@ def init(
     @param template: Template directory, to pass to C{git init}.
 
     @type template: str
+
+    @param mode: Permissions for the new reposistory
+
+    @type mode: int
     """
     if _git is None:
         _git = 'git'
@@ -41,8 +46,7 @@ def init(
     if template is None:
         template = resource_filename('gitosis.templates', 'default')
 
-
-    util.mkdir(path, 0750)
+    util.mkdir(path, mode)
     args = [
         _git,
         '--git-dir=.',
